@@ -1,0 +1,27 @@
+[
+  {
+    "domain": "paypa1-secure.example.com",
+    "source": "bundled-test-list",
+    "note": "PayPal lookalike used for testing; RFC 2606 reserved domain."
+  },
+  {
+    "domain": "secure-chase-online.example",
+    "source": "bundled-test-list",
+    "note": "Fake banking login page used for testing."
+  },
+  {
+    "domain": "appleid-verify.example.net",
+    "source": "bundled-test-list",
+    "note": "Fake Apple ID verification page used for testing."
+  },
+  {
+    "domain": "login-microsoft-secure.example.org",
+    "source": "bundled-test-list",
+    "note": "Fake Microsoft login page used for testing."
+  },
+  {
+    "domain": "crypto-doubler-bonus.example.org",
+    "source": "bundled-test-list",
+    "note": "Fake crypto giveaway page used for testing."
+  }
+]
