@@ -14,13 +14,13 @@ This is a practice project built with
 
 ## Status
 
-| Phase | Scope | Status |
-|---|---|---|
-| 1 — Blocklist MVP (Chrome) | Static bundled blocklist enforced via `declarativeNetRequest`, explainable blocked page, status popup | Done (code complete; manual Chrome verification pending) |
-| 2 — Heuristic scoring (Chrome) | URL/domain feature scoring for domains not on the blocklist | Not started |
-| 3 — Cross-browser port | Verify behavior on Firefox and Edge | Not started |
-| 4 — Safari port | Xcode conversion and Safari fixes | Not started |
-| 5 — On-device ML (stretch) | TensorFlow.js scoring, still fully on-device | Not started |
+| Phase                          | Scope                                                                                                 | Status                                                   |
+| ------------------------------ | ----------------------------------------------------------------------------------------------------- | -------------------------------------------------------- |
+| 1 — Blocklist MVP (Chrome)     | Static bundled blocklist enforced via `declarativeNetRequest`, explainable blocked page, status popup | Done (code complete; manual Chrome verification pending) |
+| 2 — Heuristic scoring (Chrome) | URL/domain feature scoring for domains not on the blocklist                                           | Not started                                              |
+| 3 — Cross-browser port         | Verify behavior on Firefox and Edge                                                                   | Not started                                              |
+| 4 — Safari port                | Xcode conversion and Safari fixes                                                                     | Not started                                              |
+| 5 — On-device ML (stretch)     | TensorFlow.js scoring, still fully on-device                                                          | Not started                                              |
 
 ## How it works (Phase 1)
 
@@ -44,6 +44,7 @@ Requires [pnpm](https://pnpm.io).
 pnpm install        # install dependencies
 pnpm dev            # dev build with live reload
 pnpm build          # production build to build/chrome-mv3-prod
+pnpm package        # zip the built extension for store submission
 pnpm test           # run unit tests (vitest, 13 tests)
 pnpm typecheck      # tsc --noEmit
 ```
