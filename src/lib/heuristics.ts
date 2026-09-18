@@ -82,7 +82,7 @@ const FEATURE_WEIGHTS: Record<keyof HeuristicFeatures, number> = {
   brandSimilarity: 0.4,
   punycode: 0.35,
   ipHost: 0.18,
-  atSymbol: 0.12,
+  atSymbol: 0.35,
   suspiciousTld: 0.1,
   hostEntropy: 0.1,
   credentialPath: 0.08,

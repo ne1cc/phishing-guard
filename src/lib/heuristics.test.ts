@@ -60,7 +60,7 @@ describe("scoreUrl on suspicious sites", () => {
   })
 
   it("flags a userinfo '@' with a spoofed display host", () => {
-    const result = scoreUrl("https://google.com@xn--80ak6aa92e.com/")
+    const result = scoreUrl("https://google.com@evil-example.io/")
     expect(result.features.atSymbol).toBe(1)
     expect(shouldWarn(result)).toBe(true)
   })
