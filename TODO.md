@@ -1,9 +1,9 @@
 # TODO — phishing-guard
 
-Mirrors the build phases in [AGENTS.md](AGENTS.md) section 5. Phase 1 is
-code complete: unit tests, typecheck, and production build pass. Boxes stay
-unchecked until verified; only real-browser verification remains for
-Phase 1, per AGENTS.md section 6.
+Mirrors the build phases in [AGENTS.md](AGENTS.md) section 5. Phases 1, 2,
+3 (build-level), and 5 (baseline model) are code complete: unit tests,
+typecheck, and builds pass. Remaining boxes need real browsers
+(Chrome verification, Firefox `web-ext run`, Edge, Safari via Xcode).
 
 ## Phase 1 — Blocklist MVP (Chrome only)
 
@@ -25,38 +25,51 @@ Phase 1, per AGENTS.md section 6.
 
 ## Phase 2 — Heuristic scoring (Chrome only)
 
-- [ ] Extract URL/domain features for domains not on the blocklist
-      (TLD/entropy as domain-age proxy, suspicious subdomain patterns)
-- [ ] Levenshtein distance to a short list of commonly-spoofed brand names
-- [ ] Assign a risk score; above threshold warn (not hard-block) with the
-      reason shown
+- [x] Extract URL/domain features for domains not on the blocklist
+      (TLD/entropy as domain-age proxy, suspicious subdomain patterns) —
+      `src/lib/heuristics.ts`, 11-feature vector
+- [x] Levenshtein distance to a short list of commonly-spoofed brand names
+      (typosquat + brand-embed signals; legit domains short-circuit)
+- [x] Assign a risk score; above threshold warn (not hard-block) with the
+      reason shown — `WARN_THRESHOLD = 35`, shadow-DOM banner in
+      `src/contents/warning-banner.ts`, popup "Last warning"
 - [ ] Done when hand-crafted lookalike URLs (e.g. `paypa1-secure.example.com`)
-      are flagged and normal sites are not
+      are flagged and normal sites are not — unit-tested (35/35), manual
+      Chrome verification pending
 
 ## Phase 3 — Cross-browser port
 
-- [ ] Confirm every API call goes through `browser.*` via
-      `webextension-polyfill` (browser-specific code only in
-      `src/platform/<browser>.ts`)
+- [x] Confirm every API call goes through `browser.*` via
+      `webextension-polyfill` (browser-specific capability code only in
+      `src/platform/rules-backend.ts`)
+- [x] Firefox build target builds clean and passes `web-ext lint`
+      (0 errors); DNR backend auto-selects session (Chrome/Safari) vs
+      dynamic (Firefox) rules
 - [ ] Build and manually load into Firefox via `web-ext run`; fix API gaps
+      (Firefox not installed on the dev machine)
 - [ ] Build and load into Edge (expected near-identical to Chrome)
 - [ ] Verify Phase 1–2 behavior is unchanged on Chrome, Firefox, and Edge
 
 ## Phase 4 — Safari
 
 - [ ] Run `safari-web-extension-converter` against the built extension
+      — BLOCKED: requires full Xcode (only CommandLineTools installed);
+      procedure documented in README
 - [ ] Fix WKWebView extension-host gaps (DNR rule complexity, content
       script APIs — check current Safari release notes)
 - [ ] Verify it loads and blocks via Safari's Extensions preferences
 
 ## Phase 5 — On-device ML (stretch)
 
-- [ ] Load a small TensorFlow.js model in the background service worker or
-      content script
-- [ ] Feed it the Phase 2 heuristic feature vector as a baseline; replace
-      with real model output once trained
-- [ ] Verify the model score is used instead of/alongside the heuristic
-      score, with no page content sent off-device
+- [x] Model runs in the content script entirely on-device:
+      `src/models/logistic.ts` — logistic regression over the same 11
+      feature vector as Phase 2, behind the `PhishingModel` adapter
+      (TF.js swap point; dependency deferred until a trained model exists)
+- [x] Model score feeds warning decisions alongside the heuristic score
+      (warn if either crosses its threshold); no page content sent
+      off-device
+- [ ] Replace baseline weights with a real trained TF.js model (stretch
+      goal beyond the current milestone)
 
 ## Per-browser testing checklist
 

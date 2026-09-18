@@ -14,13 +14,73 @@ This is a practice project built with
 
 ## Status
 
-| Phase                          | Scope                                                                                                 | Status                                                   |
-| ------------------------------ | ----------------------------------------------------------------------------------------------------- | -------------------------------------------------------- |
-| 1 — Blocklist MVP (Chrome)     | Static bundled blocklist enforced via `declarativeNetRequest`, explainable blocked page, status popup | Done (code complete; manual Chrome verification pending) |
-| 2 — Heuristic scoring (Chrome) | URL/domain feature scoring for domains not on the blocklist                                           | Not started                                              |
-| 3 — Cross-browser port         | Verify behavior on Firefox and Edge                                                                   | Not started                                              |
-| 4 — Safari port                | Xcode conversion and Safari fixes                                                                     | Not started                                              |
-| 5 — On-device ML (stretch)     | TensorFlow.js scoring, still fully on-device                                                          | Not started                                              |
+| Phase                          | Scope                                                                                                 | Status                                                                    |
+| ------------------------------ | ----------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------- |
+| 1 — Blocklist MVP (Chrome)     | Static bundled blocklist enforced via `declarativeNetRequest`, explainable blocked page, status popup | Done (code complete; manual Chrome verification pending)                  |
+| 2 — Heuristic scoring (Chrome) | URL/domain feature scoring for domains not on the blocklist                                           | Done (unit-tested; warn banner ships; manual Chrome verification pending) |
+| 3 — Cross-browser port         | Verify behavior on Firefox and Edge                                                                   | Code + builds + `web-ext lint` done; manual browser passes pending        |
+| 4 — Safari port                | Xcode conversion and Safari fixes                                                                     | Blocked: needs full Xcode; procedure documented below                     |
+| 5 — On-device ML (stretch)     | TensorFlow.js scoring, still fully on-device                                                          | Baseline done: dependency-free logistic model behind a model adapter      |
+
+---
+
+## How a warning happens, end to end (Phases 2 + 5)
+
+For URLs _not_ on the blocklist (those are redirected before any page
+loads), a content script scores every page you open:
+
+```
+content script (src/contents/warning-banner.ts) runs on the page
+        │
+        ▼
+scoreUrl(location.href)          ← src/lib/heuristics.ts (pure)
+  11 URL features: brand typosquat/embed (Levenshtein vs 25 brands),
+  punycode (xn--), bare-IP host, userinfo '@', suspicious TLDs,
+  hostname entropy, credential-style path, digit ratio, hyphens,
+  subdomain depth, host length
+        │
+        ├─ heuristicScore = Σ weight·feature   (WARN_THRESHOLD = 35)
+        ▼
+getModel().score(features)       ← src/models/logistic.ts (pure, on-device)
+  logistic regression over the SAME feature vector
+  (MODEL_THRESHOLD = 55)
+        │
+        ▼
+warn if either threshold is crossed
+        │   → dismissible red banner via shadow DOM (textContent only,
+        │     every reason listed, both scores shown)
+        └──→ WarnEvent recorded to storage.local["lastWarned"]
+             → popup shows "Last warning"
+```
+
+Invariants: warnings **never block** navigation; scoring uses the URL only
+(no page content, nothing off-device); a broken content script can never
+break the page (guarded try/catch around the whole flow).
+
+The model is a dependency-free logistic baseline (weights baked in
+`src/models/logistic.ts`) behind the `PhishingModel` interface — when a
+real trained TF.js model exists, it slots in as one new adapter
+implementation with zero call-site changes. TF.js itself is deliberately
+not bundled yet (~2 MB to multiply an 11-vector).
+
+## Cross-browser notes (Phases 3–4)
+
+- Every browser API call goes through `webextension-polyfill`; the one
+  browser-specific concern — Firefox's DNR lacking session rules — is
+  handled by capability detection in `src/platform/rules-backend.ts`
+  (session rules on Chrome/Safari, dynamic rules on Firefox).
+- Firefox: `pnpm build --target=firefox-mv2` (gecko id wired via
+  `.env.firefox`) then `pnpm run lint:firefox` (0 errors). Interactive
+  testing: `pnpm dlx web-ext run --source-dir build/firefox-mv2-prod`
+  (needs Firefox installed).
+- Edge: load `build/chrome-mv3-prod` via `edge://extensions` (same
+  engine as Chrome).
+- Safari (needs full Xcode, not just CommandLineTools):
+  `xcrun safari-web-extension-converter build/chrome-mv3-prod
+--project-location ./safari --app-name "Phishing guard"
+--bundle-identifier dev.n1ecc.phishing-guard --no-open`, then open the
+  generated Xcode project, build, and enable the extension in Safari's
+  Settings → Extensions.
 
 ---
 
@@ -208,9 +268,10 @@ so").
 - **`tsconfig.json`** — extends `plasmo/templates/tsconfig.base`; `~*`
   alias → `./src/*`; `resolveJsonModule` for `blocklist.json` imports.
 - **Plasmo conventions used:** `src/` layout (entries auto-discovered:
-  `background/index.ts`, `popup.tsx`, `tabs/*.tsx` → real HTML pages);
-  `src/platform/` and `src/models/` are empty placeholders reserved for
-  Phase 3+ (browser-specific escapes) and Phase 5 (TF.js).
+  `background/index.ts`, `popup.tsx`, `tabs/*.tsx` → real HTML pages,
+  `contents/*` → content scripts); `src/platform/` holds the one
+  browser-specific escape hatch (DNR rules backend); `src/models/` holds
+  the on-device model behind its adapter interface.
 - **`vitest.config.ts`** — node environment, `src/**/*.test.ts`, `~` alias
   mirrored from tsconfig.
 
@@ -218,16 +279,23 @@ so").
 
 ## Testing & verification
 
-- **16 vitest tests** across `src/lib/blocklist.test.ts` (11) and
-  `src/lib/explain.test.ts` (2… plus 3 `findBlocklistEntry` cases): the
-  regex is executed against realistic URLs — positives (http/https,
-  paths, queries, ports, deep subdomains), negatives (`notexample.com`,
-  `example.com.evil.io`, `example.comic.org`, other schemes), the
-  builder↔parser round-trip contract, and explain copy.
-- `pnpm exec tsc --noEmit` clean, `pnpm build` clean, prettier clean.
-- What is _not_ unit-tested: browser glue (`storage.ts`, `rules.ts` —
-  requires a real extension host) — covered by the manual Chrome checklist
-  below.
+- **35 vitest tests** across four files:
+  - `src/lib/blocklist.test.ts` (11): the block regex executed against
+    realistic URLs — positives (http/https, paths, queries, ports, deep
+    subdomains), negatives (`notexample.com`, `example.com.evil.io`,
+    `example.comic.org`, other schemes), the builder↔parser round-trip
+    contract.
+  - `src/lib/explain.test.ts` (2): block and unknown-block copy.
+  - `src/lib/heuristics.test.ts` (11): Levenshtein, calibration
+    invariants (google/github/apple score 0; typosquats, punycode,
+    userinfo-@ warn; bare IP alone doesn't), score clamping, threshold.
+  - `src/models/logistic.test.ts` (5): exact sigmoid values (4 / 27 / 65),
+    threshold crossing, realistic-URL self-consistency.
+- `pnpm exec tsc --noEmit` clean; `pnpm build` (chrome-mv3) and
+  `pnpm build --target=firefox-mv2` clean; `web-ext lint` 0 errors.
+- What is _not_ unit-tested: browser glue (`storage.ts`, `rules.ts`,
+  content-script injection — requires a real extension host) — covered by
+  the manual checklists below.
 
 ## Development
 
@@ -238,8 +306,10 @@ pnpm install        # install dependencies
 pnpm dev            # dev build with live reload
 pnpm build          # production build to build/chrome-mv3-prod
 pnpm package        # zip the built extension for store submission
-pnpm test           # run unit tests (vitest, 16 tests)
+pnpm test           # run unit tests (vitest, 35 tests)
 pnpm typecheck      # tsc --noEmit
+pnpm build --target=firefox-mv2   # Firefox build
+pnpm run lint:firefox             # web-ext lint on the Firefox build
 ```
 
 ## Load in Chrome
@@ -265,6 +335,22 @@ extension does nothing on normal sites, browse anywhere else and verify no
 interference. Toggle protection off and on from the popup to see the
 blocked page stop and start working.
 
+## Test warnings (heuristics + model)
+
+Warnings only fire for URLs **not** on the blocklist, and never block
+navigation. The banner is dismissible and lists its reasons. URLs that
+trigger it (safe to type — they don't resolve):
+
+```
+https://paypa1-support.com/login     # brand typosquat + credential path
+https://secure-chase-verify.net/     # embedded brand + credential path
+https://google.com@evil-example.io/  # userinfo '@' disguise
+https://xn--80ak6aa92e.com/          # punycode lookalike
+```
+
+Sites like `google.com`, `github.com`, or `apple.com` must show nothing.
+The popup's "Last warning" section records the most recent one.
+
 ## Manual Chrome checklist (AGENTS.md section 6)
 
 The per-browser checklist repeats every phase; Phase 1 covers the Chrome
@@ -281,26 +367,26 @@ row (Firefox/Edge/Safari rows apply to later phases):
 
 ```
 src/
-├── background/   # service worker: DNR session-rule sync, message routing
+├── background/   # service worker: DNR rule sync (session or dynamic), messages
 │   ├── index.ts  # entry: listener registration, enable-state messages
-│   └── rules.ts  # syncBlocklistRules(): storage state → session rules
+│   └── rules.ts  # syncBlocklistRules(): storage state → DNR rules
+├── contents/     # warning-banner.ts — heuristic warning overlay (Phase 2)
 ├── data/         # blocklist.json — bundled domain list
-├── lib/          # pure logic: blocklist.ts, explain.ts (+ tests), types
-│                 # impure glue: storage.ts (storage.local accessors)
+├── lib/          # pure logic: blocklist.ts, heuristics.ts, explain.ts, types
+│                 # (+ colocated vitest tests) · impure glue: storage.ts
+├── models/       # logistic.ts + PhishingModel adapter (Phase 5 baseline)
+├── platform/     # rules-backend.ts — session/dynamic DNR capability detect
 ├── tabs/         # blocked.tsx — the explainable blocked page
-├── popup.tsx     # toolbar popup: status, toggle, last blocked
-├── platform/     # (empty — browser-specific escapes, Phase 3+)
-└── models/       # (empty — on-device TF.js, Phase 5+)
+└── popup.tsx     # toolbar popup: status, toggle, last blocked, last warning
 ```
 
 ## How this was built (process record)
 
-Work proceeded through a brainstormed design spec
-(`docs/superpowers/specs/2026-09-17-phishing-guard-phase1-design.md`) and a
-task-by-task implementation plan
-(`docs/superpowers/plans/2026-09-17-phishing-guard-phase1.md`), executed
-with a fresh implementer subagent per task and an independent reviewer per
-diff. Notable verified decisions from that process:
+Work proceeded through a brainstormed design spec and a task-by-task
+implementation plan per milestone (see
+`docs/superpowers/specs/` and `docs/superpowers/plans/`), executed with a
+fresh implementer subagent per task and an independent reviewer per diff.
+Notable verified decisions from that process:
 
 - Scaffolded from the create-plasmo 0.90.5 template (driven through a
   PTY), adapted to the `src/` layout; pnpm 12 `allowBuilds` configured.
@@ -310,3 +396,9 @@ diff. Notable verified decisions from that process:
 - Final whole-branch review hardened the blocked page: close affordance
   on every branch, and block claims verified against the bundled list
   before display/recording (anti content-spoofing).
+- Phases 2–5: heuristic `atSymbol` weight raised to 0.35 after review
+  math showed 0.12 could never warn alone; Firefox handled via
+  capability-detected DNR backend (session vs dynamic) instead of UA
+  sniffing; the TF.js dependency deferred — the on-device baseline model
+  ships dependency-free behind the `PhishingModel` adapter (swap point
+  for a real trained model).

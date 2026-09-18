@@ -23,11 +23,17 @@ information about which sites you visit is shared with anyone.
 ## Data storage
 
 The extension uses `browser.storage.local` only, which never leaves your
-device and is not synced to any account. It stores exactly two keys:
+device and is not synced to any account. It stores exactly three keys:
 
 - `enabled` — whether protection is on or off.
 - `lastBlocked` — the most recent blocked navigation: URL, matched domain,
   source list name, and timestamp. Only the single most recent event is kept.
+- `lastWarned` — the most recent heuristic warning shown on a page: URL,
+  domain, heuristic and model risk scores, the reasons, and a timestamp.
+  Only the single most recent warning is kept.
+
+The warning scores are computed from the URL only — the extension never
+reads page contents to produce them.
 
 Uninstalling the extension removes all of this data.
 
@@ -51,7 +57,15 @@ No other extension file is reachable from the web.
 
 Every block is explainable: the blocked page states which domain was
 matched, which source list it came from, and the original URL. Nothing is
-blocked silently.
+blocked silently. Heuristic warnings are likewise explainable — the banner
+lists the specific reasons and both risk scores — and warnings never block
+navigation.
+
+## Model scoring
+
+The warning pipeline includes a small logistic model that runs entirely
+on-device over URL features. No model, feature, or page data is ever sent
+anywhere; there is no server component.
 
 ## Future changes
 
