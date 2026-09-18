@@ -1,0 +1,50 @@
+{
+  "name": "phishing-guard",
+  "displayName": "Phishing guard",
+  "version": "0.0.1",
+  "description": "On-device phishing and scam site blocker",
+  "author": "lex",
+  "scripts": {
+    "dev": "plasmo dev",
+    "build": "plasmo build",
+    "package": "plasmo package",
+    "test": "vitest run",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "plasmo": "0.90.5",
+    "react": "18.2.0",
+    "react-dom": "18.2.0",
+    "webextension-polyfill": "0.12.0"
+  },
+  "devDependencies": {
+    "@ianvs/prettier-plugin-sort-imports": "4.1.1",
+    "@types/chrome": "0.0.258",
+    "@types/node": "20.11.5",
+    "@types/react": "18.2.48",
+    "@types/react-dom": "18.2.18",
+    "@types/webextension-polyfill": "0.12.3",
+    "prettier": "3.2.4",
+    "typescript": "5.3.3",
+    "vitest": "3.2.4"
+  },
+  "manifest": {
+    "permissions": [
+      "declarativeNetRequest",
+      "storage"
+    ],
+    "host_permissions": [
+      "<all_urls>"
+    ],
+    "web_accessible_resources": [
+      {
+        "resources": [
+          "tabs/blocked.html"
+        ],
+        "matches": [
+          "<all_urls>"
+        ]
+      }
+    ]
+  }
+}
