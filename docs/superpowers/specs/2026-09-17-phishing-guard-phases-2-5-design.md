@@ -44,7 +44,7 @@ only — no page content, preserving the on-device/privacy guarantee:
 | `hostLength` | 0–1 | min(max(0, len−20)/30, 1) |
 
 Weights (sum ×100, clamped 0–100): brandSimilarity .40, punycode .35,
-ipHost .18, atSymbol .12, suspiciousTld .10, hostEntropy .10,
+atSymbol .35, ipHost .18, suspiciousTld .10, hostEntropy .10,
 credentialPath .08, digitRatio .04, hyphenCount .04, subdomainDepth .04,
 hostLength .01. `WARN_THRESHOLD = 35`.
 
