@@ -51,9 +51,9 @@ function injectBanner(
   document.documentElement.append(host)
 }
 
-const verdict = evaluate(window.location.href)
-if (verdict.warn) {
-  try {
+try {
+  const verdict = evaluate(window.location.href)
+  if (verdict.warn) {
     injectBanner(
       verdict.heuristic.reasons,
       verdict.heuristic.score,
@@ -67,7 +67,7 @@ if (verdict.warn) {
       reasons: verdict.heuristic.reasons,
       warnedAt: Date.now()
     })
-  } catch (error) {
-    console.error("[phishing-guard] failed to show warning banner", error)
   }
+} catch (error) {
+  console.error("[phishing-guard] failed to evaluate or show warning", error)
 }
