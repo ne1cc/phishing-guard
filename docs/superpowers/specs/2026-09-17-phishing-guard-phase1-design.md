@@ -28,7 +28,7 @@ are deferred; the blocklist schema is designed so they drop in later.
 | API surface | `webextension-polyfill` (`browser.*`) everywhere | Spec ground rule; makes Phase 3 a straight port | Direct `chrome.*` |
 | Rule storage | DNR **session rules** via `updateSessionRules` | Dynamic toggle support, no static-ruleset manifest wiring, single atomic update call | Static ruleset JSON in manifest (harder to toggle, more Plasmo manifest surgery) |
 | Match + redirect | `regexFilter` + `action.redirect.regexSubstitution` | Only mechanism that preserves the original URL into the blocked page (capture group `\1` appended as query), so blocks stay explainable | `condition.requestDomains` + `extensionPath` (loses original URL); `action.block` + webNavigation interstitial (racy, loses URL) |
-| Blocked page | `src/blocked.tsx` Plasmo page → emits `blocked.html` | Plasmo-idiomatic, typed, no asset-copy uncertainty | Root-level static `blocked.html` (Plasmo copy semantics unverified) |
+| Blocked page | `src/tabs/blocked.tsx` Plasmo Tab Page → emits `tabs/blocked.html` | Plasmo-idiomatic (Tab Pages are the supported mechanism for custom pages), typed, no asset-copy uncertainty — verified against Plasmo 0.90.5 docs | Root-level static `blocked.html` (Plasmo copy semantics unverified) |
 | Package manager | pnpm (installed via corepack) | AGENTS.md scaffold steps specify pnpm | npm/bun |
 | Testing | Vitest unit tests on pure lib functions | DNR/browser APIs aren't unit-testable; keep logic pure and test the transforms | Playwright/extension E2E (no good cross-browser story yet per AGENTS.md) |
 
@@ -38,7 +38,7 @@ are deferred; the blocklist schema is designed so they drop in later.
 src/
 ├── background.ts        # entry: SW wake → ensure rules applied; message routing
 ├── popup.tsx            # entry: status, enable/disable toggle, last-blocked info
-├── blocked.tsx          # entry page: renders blocked.html with url+source params
+├── tabs/blocked.tsx     # Tab Page: renders tabs/blocked.html with url+source params
 ├── contents/plasmo.ts   # no-op content script (pipeline placeholder for Phase 2)
 ├── data/blocklist.json  # bundled entries: { domain, source, note? }
 ├── lib/
@@ -49,9 +49,11 @@ src/
 └── models/              # (empty; TF.js, Phase 5+)
 ```
 
-Manifest extras merged via Plasmo's `package.json` manifest key:
+Manifest extras merged via Plasmo's `manifest` key in `package.json`:
 `permissions: ["declarativeNetRequest", "storage"]`,
-`web_accessible_resources: [{ resources: ["blocked.html"], matches: ["<all_urls>"] }]`.
+`host_permissions: ["<all_urls>"]` (DNR redirects require host permission over
+redirected requests),
+`web_accessible_resources: [{ resources: ["tabs/blocked.html"], matches: ["<all_urls>"] }]`.
 
 ## Data flow
 
@@ -60,10 +62,10 @@ Manifest extras merged via Plasmo's `package.json` manifest key:
    and `blocklist.json`, builds rules, and issues one `updateSessionRules`
    call (`removeRules: [RULE_TAG]` + `addRules`). Deterministic rule IDs.
 3. Navigation to a listed domain: DNR redirects the main frame to
-   `browser.runtime.getURL("blocked.html")` +
+   `browser.runtime.getURL("tabs/blocked.html")` +
    `?source=<name>&url=<original URL raw>` (original URL is the **last**
    query param so its unencoded `&`/`?` characters don't corrupt parsing).
-4. `blocked.tsx` parses params, records the event to `storage.local`
+4. `tabs/blocked.tsx` parses params, records the event to `storage.local`
    (timestamp, domain, source) for the popup's "last blocked" display, and
    renders the reason via `explain.ts`.
 5. Popup toggle sends `{ type: "setEnabled", value }` to the background,
@@ -95,13 +97,19 @@ Manifest extras merged via Plasmo's `package.json` manifest key:
 - Manual Chrome pass (checklist in README): load unpacked, confirm block of
   a test domain, confirm no effect on other sites.
 
-## Risks / to verify during build
+## Risks / verification status
 
-- Non-interactive `create plasmo` into an existing empty dir — fallback:
-  clone `PlasmoHQ/extension-template` and adjust.
-- Plasmo manifest-merge key name (`web_extension.manifest` vs `manifest`) —
-  verify by inspecting build output; fallback: post-build manifest patch.
-- `regexSubstitution` availability for `chrome-extension://` targets in
-  current Chrome MV3 — verify with a manual load; fallback: `extensionPath`
-  redirect plus a `storage`-recorded recent-block list (loses per-URL display,
-  keeps explainability via source attribution).
+- ~~Non-interactive `create plasmo`~~ — resolved: scaffolded from the
+  create-plasmo 0.90.5 template (driven through a PTY), adapted to the `src/`
+  layout; `pnpm build` verified producing `build/chrome-mv3-prod` with merged
+  manifest keys.
+- ~~Plasmo manifest-merge key name~~ — resolved: `"manifest"` key in
+  `package.json` merges `permissions`, `host_permissions`, and
+  `web_accessible_resources` (verified in build output).
+- pnpm 12 requires `allowBuilds` map in `pnpm-workspace.yaml` for
+  native-build deps (esbuild, @swc/core, lmdb, sharp, @parcel/watcher,
+  msgpackr-extract) — configured.
+- `regexSubstitution` targeting `chrome-extension://` in current Chrome MV3 —
+  to be verified with a manual load; fallback: `extensionPath` redirect plus
+  storage-recorded recent-block list (loses per-URL display, keeps
+  explainability via source attribution).
