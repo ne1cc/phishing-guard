@@ -41,7 +41,7 @@ Uninstalling the extension removes all of this data.
 
 - `declarativeNetRequest` — used to install session rules that redirect
   navigation to known-bad blocklist domains to the local blocked page.
-- `storage` — used for the two local keys described above.
+- `storage` — used for the three local keys described above.
 - `host_permissions: <all_urls>` — required so the declarativeNetRequest
   rules can match and redirect main-frame navigations on any site. The
   extension does not read or transmit any data to those hosts; the permission

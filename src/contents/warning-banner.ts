@@ -1,6 +1,6 @@
 import { explainHeuristicWarning } from "~/lib/explain"
 import { scoreUrl, shouldWarn } from "~/lib/heuristics"
-import { recordWarnEvent } from "~/lib/storage"
+import { getEnabled, recordWarnEvent } from "~/lib/storage"
 import { getModel, MODEL_THRESHOLD } from "~/models"
 
 const BANNER_ID = "phishing-guard-banner"
@@ -51,23 +51,27 @@ function injectBanner(
   document.documentElement.append(host)
 }
 
-try {
-  const verdict = evaluate(window.location.href)
-  if (verdict.warn) {
-    injectBanner(
-      verdict.heuristic.reasons,
-      verdict.heuristic.score,
-      verdict.modelScore
-    )
-    void recordWarnEvent({
-      url: window.location.href,
-      domain: window.location.hostname,
-      heuristicScore: verdict.heuristic.score,
-      modelScore: verdict.modelScore,
-      reasons: verdict.heuristic.reasons,
-      warnedAt: Date.now()
-    })
+void (async () => {
+  try {
+    const enabled = await getEnabled()
+    if (!enabled) return
+    const verdict = evaluate(window.location.href)
+    if (verdict.warn) {
+      injectBanner(
+        verdict.heuristic.reasons,
+        verdict.heuristic.score,
+        verdict.modelScore
+      )
+      void recordWarnEvent({
+        url: window.location.href,
+        domain: window.location.hostname,
+        heuristicScore: verdict.heuristic.score,
+        modelScore: verdict.modelScore,
+        reasons: verdict.heuristic.reasons,
+        warnedAt: Date.now()
+      })
+    }
+  } catch (error) {
+    console.error("[phishing-guard] failed to evaluate or show warning", error)
   }
-} catch (error) {
-  console.error("[phishing-guard] failed to evaluate or show warning", error)
-}
+})()

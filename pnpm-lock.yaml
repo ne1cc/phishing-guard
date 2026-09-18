@@ -49,7 +49,7 @@ importers:
         specifier: 3.2.4
         version: 3.2.4(@types/node@20.11.5)(less@4.9.1(supports-color@7.2.0))(lightningcss@1.33.0)(sass@1.104.1)(supports-color@7.2.0)(yaml@2.9.1)
       web-ext:
-        specifier: ^10.6.0
+        specifier: 10.6.0
         version: 10.6.0(supports-color@7.2.0)
 
 packages:

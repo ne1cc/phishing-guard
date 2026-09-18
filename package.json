@@ -28,7 +28,7 @@
     "prettier": "3.2.4",
     "typescript": "5.3.3",
     "vitest": "3.2.4",
-    "web-ext": "^10.6.0"
+    "web-ext": "10.6.0"
   },
   "manifest": {
     "browser_specific_settings": {

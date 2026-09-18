@@ -280,12 +280,12 @@ so").
 ## Testing & verification
 
 - **35 vitest tests** across four files:
-  - `src/lib/blocklist.test.ts` (11): the block regex executed against
+  - `src/lib/blocklist.test.ts` (14): the block regex executed against
     realistic URLs — positives (http/https, paths, queries, ports, deep
     subdomains), negatives (`notexample.com`, `example.com.evil.io`,
     `example.comic.org`, other schemes), the builder↔parser round-trip
     contract.
-  - `src/lib/explain.test.ts` (2): block and unknown-block copy.
+  - `src/lib/explain.test.ts` (5): block and unknown-block copy.
   - `src/lib/heuristics.test.ts` (11): Levenshtein, calibration
     invariants (google/github/apple score 0; typosquats, punycode,
     userinfo-@ warn; bare IP alone doesn't), score clamping, threshold.
