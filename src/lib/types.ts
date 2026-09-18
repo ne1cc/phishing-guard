@@ -11,6 +11,15 @@ export interface BlockEvent {
   blockedAt: number
 }
 
+export interface WarnEvent {
+  url: string
+  domain: string
+  heuristicScore: number
+  modelScore: number
+  reasons: string[]
+  warnedAt: number
+}
+
 export interface DnrRule {
   id: number
   priority: number

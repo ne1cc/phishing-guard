@@ -1,17 +1,19 @@
 import { useEffect, useState } from "react"
 import browser from "webextension-polyfill"
 
-import { getEnabled, getLastBlocked } from "~/lib/storage"
-import type { BlockEvent } from "~/lib/types"
+import { getEnabled, getLastBlocked, getLastWarned } from "~/lib/storage"
+import type { BlockEvent, WarnEvent } from "~/lib/types"
 
 function Popup() {
   const [enabled, setEnabledState] = useState<boolean | null>(null)
   const [lastBlocked, setLastBlocked] = useState<BlockEvent | null>(null)
+  const [lastWarned, setLastWarned] = useState<WarnEvent | null>(null)
 
   useEffect(() => {
     void (async () => {
       setEnabledState(await getEnabled())
       setLastBlocked(await getLastBlocked())
+      setLastWarned(await getLastWarned())
     })()
   }, [])
 
@@ -57,6 +59,21 @@ function Popup() {
           <div style={{ fontSize: 12, color: "#666" }}>
             Nothing blocked yet.
           </div>
+        )}
+      </div>
+      <div style={{ marginTop: 12 }}>
+        <h3 style={{ margin: "0 0 4px", fontSize: 13 }}>Last warning</h3>
+        {lastWarned ? (
+          <div style={{ fontSize: 12 }}>
+            <div style={{ fontWeight: 600 }}>{lastWarned.domain}</div>
+            <div>
+              heuristic {lastWarned.heuristicScore}/100 · model{" "}
+              {lastWarned.modelScore}/100
+            </div>
+            <div>{new Date(lastWarned.warnedAt).toLocaleString()}</div>
+          </div>
+        ) : (
+          <div style={{ fontSize: 12, color: "#666" }}>No warnings yet.</div>
         )}
       </div>
     </div>
