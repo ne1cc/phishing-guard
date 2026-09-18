@@ -46,7 +46,7 @@ Plasmo 0.90.5 template adapted to `src/` layout; `pnpm-workspace.yaml` `allowBui
   - `blocklist.ts`: `RULE_TAG = "phishing-guard-blocklist"`, `BLOCKED_PAGE_PATH = "tabs/blocked.html"`, `hostToRegexPattern(domain: string): string`, `buildRules(entries: readonly BlocklistEntry[], blockedPageBaseUrl: string, startId?: number): DnrRule[]`, `parseBlockedPageParams(search: string): { source: string; url: string } | null`
   - `explain.ts`: `explainBlocklistMatch(entry: Pick<BlocklistEntry, "domain" | "source">): string`, `explainUnknownBlock(): string`
 
-- [x] **Step 1: Write `src/lib/types.ts`**
+- [ ] **Step 1: Write `src/lib/types.ts`**
 
 ```ts
 export interface BlocklistEntry {
@@ -76,7 +76,7 @@ export interface DnrRule {
 }
 ```
 
-- [x] **Step 2: Write `src/data/blocklist.json`** — all domains under RFC 2606 reserved names so no real site can be affected.
+- [ ] **Step 2: Write `src/data/blocklist.json`** — all domains under RFC 2606 reserved names so no real site can be affected.
 
 ```json
 [
@@ -108,7 +108,7 @@ export interface DnrRule {
 ]
 ```
 
-- [x] **Step 3: Write `src/lib/blocklist.ts`**
+- [ ] **Step 3: Write `src/lib/blocklist.ts`**
 
 ```ts
 import type { BlocklistEntry, DnrRule } from "./types"
@@ -175,7 +175,7 @@ export function parseBlockedPageParams(
 
 Design notes for the implementer: the redirect substitution relies on `regexFilter` capture group 1 holding the full original URL — that is why `hostToRegexPattern` wraps the whole match in `(...)`. The original URL is placed **last** in the query so its raw `&`/`?` characters cannot corrupt `source` parsing. URL is never rendered as HTML.
 
-- [x] **Step 4: Write `src/lib/explain.ts`**
+- [ ] **Step 4: Write `src/lib/explain.ts`**
 
 ```ts
 import type { BlocklistEntry } from "./types"
@@ -191,7 +191,7 @@ export function explainUnknownBlock(): string {
 }
 ```
 
-- [x] **Step 5: Write `vitest.config.ts`**
+- [ ] **Step 5: Write `vitest.config.ts`**
 
 ```ts
 import path from "node:path"
@@ -210,7 +210,7 @@ export default defineConfig({
 })
 ```
 
-- [x] **Step 6: Write `src/lib/blocklist.test.ts`**
+- [ ] **Step 6: Write `src/lib/blocklist.test.ts`**
 
 ```ts
 import { describe, expect, it } from "vitest"
@@ -313,7 +313,7 @@ describe("parseBlockedPageParams", () => {
 })
 ```
 
-- [x] **Step 7: Write `src/lib/explain.test.ts`**
+- [ ] **Step 7: Write `src/lib/explain.test.ts`**
 
 ```ts
 import { describe, expect, it } from "vitest"
@@ -338,14 +338,14 @@ describe("explainUnknownBlock", () => {
 })
 ```
 
-- [x] **Step 8: Add `"resolveJsonModule": true` to `tsconfig.json` `compilerOptions`** (keep existing keys).
+- [ ] **Step 8: Add `"resolveJsonModule": true` to `tsconfig.json` `compilerOptions`** (keep existing keys).
 
-- [x] **Step 9: Run tests + typecheck**
+- [ ] **Step 9: Run tests + typecheck**
 
 Run: `pnpm test && pnpm exec tsc --noEmit`
 Expected: all tests PASS, typecheck clean.
 
-- [x] **Step 10: Commit**
+- [ ] **Step 10: Commit**
 
 ```bash
 git add src/lib src/data vitest.config.ts tsconfig.json
@@ -366,7 +366,7 @@ git commit -m "feat: add blocklist rule building, param parsing, and explain cop
   - `src/background/rules.ts`: `syncBlocklistRules(): Promise<void>` — idempotent; reapplies or clears session rules from stored enabled state.
   - `src/background/index.ts`: Plasmo background entry; message contract `{ type: "setEnabled"; value: boolean }` → responds `{ enabled: boolean }`.
 
-- [x] **Step 1: Write `src/lib/storage.ts`**
+- [ ] **Step 1: Write `src/lib/storage.ts`**
 
 ```ts
 import browser from "webextension-polyfill"
@@ -408,7 +408,7 @@ function isBlockEvent(value: unknown): value is BlockEvent {
 }
 ```
 
-- [x] **Step 2: Write `src/background/rules.ts`**
+- [ ] **Step 2: Write `src/background/rules.ts`**
 
 ```ts
 import browser from "webextension-polyfill"
@@ -448,7 +448,7 @@ export async function syncBlocklistRules(): Promise<void> {
 
 (Add `import type { BlocklistEntry } from "~/lib/types"` — the implementer must include it; the `as` cast adapts the structural `DnrRule` to the schema enum type at the boundary only.)
 
-- [x] **Step 3: Write `src/background/index.ts`**
+- [ ] **Step 3: Write `src/background/index.ts`**
 
 ```ts
 import browser from "webextension-polyfill"
@@ -484,12 +484,12 @@ browser.runtime.onMessage.addListener((message) => {
 
 Notes: `syncBlocklistRules()` runs top-level on every service-worker wake, so rules re-apply idempotently (remove existing ours, add fresh). The `void` is intentional — never await at top level before listener registration. Unknown messages return `undefined` so the polyfill does not hold the channel open.
 
-- [x] **Step 4: Verify**
+- [ ] **Step 4: Verify**
 
 Run: `pnpm exec tsc --noEmit && pnpm build`
 Expected: typecheck clean; build emits `background.js` in `build/chrome-mv3-prod` and manifest declares `background.service_worker`.
 
-- [x] **Step 5: Commit**
+- [ ] **Step 5: Commit**
 
 ```bash
 git add src/lib/storage.ts src/background
@@ -507,7 +507,7 @@ git commit -m "feat: apply blocklist as DNR session rules with enable-state sync
 - Consumes: `getEnabled`, `setEnabled`, `getLastBlocked` from `~/lib/storage`; `BlockEvent` from `~/lib/types`; `parseBlockedPageParams` from `~/lib/blocklist`; `explainBlocklistMatch`, `explainUnknownBlock` from `~/lib/explain`; `blocklist.json` (for `note` lookup); `browser.runtime.sendMessage({ type: "setEnabled", value })` → `{ enabled }`.
 - Produces: UI only. Popup reads state directly from storage; writes go through the background message.
 
-- [x] **Step 1: Write `src/popup.tsx`**
+- [ ] **Step 1: Write `src/popup.tsx`**
 
 ```tsx
 import { useEffect, useState } from "react"
@@ -579,7 +579,7 @@ function Popup() {
 export default Popup
 ```
 
-- [x] **Step 2: Write `src/tabs/blocked.tsx`** — renders the explainable block page. The URL is only ever interpolated as text (React escapes by default; never use `dangerouslySetInnerHTML`).
+- [ ] **Step 2: Write `src/tabs/blocked.tsx`** — renders the explainable block page. The URL is only ever interpolated as text (React escapes by default; never use `dangerouslySetInnerHTML`).
 
 ```tsx
 import { useEffect, useMemo } from "react"
@@ -702,12 +702,12 @@ function BlockedPage() {
 export default BlockedPage
 ```
 
-- [x] **Step 3: Verify**
+- [ ] **Step 3: Verify**
 
 Run: `pnpm exec tsc --noEmit && pnpm build && ls build/chrome-mv3-prod/tabs`
 Expected: typecheck clean; build contains `tabs/blocked.html` and `popup.html`.
 
-- [x] **Step 4: Commit**
+- [ ] **Step 4: Commit**
 
 ```bash
 git add src/popup.tsx src/tabs
@@ -723,13 +723,13 @@ git commit -m "feat: add status popup and explainable blocked page"
 
 **Interfaces:** none (docs).
 
-- [x] **Step 1: `PRIVACY.md`** — must state: no network requests, no telemetry, no page content collection, blocklist bundled locally, storage only holds enable state + last blocked event (domain/source/timestamp, local-only), `web_accessible_resources` exposes only `tabs/blocked.html`, host permission `<all_urls>` is required for DNR redirects but no browsing data is read or transmitted.
+- [ ] **Step 1: `PRIVACY.md`** — must state: no network requests, no telemetry, no page content collection, blocklist bundled locally, storage only holds enable state + last blocked event (domain/source/timestamp, local-only), `web_accessible_resources` exposes only `tabs/blocked.html`, host permission `<all_urls>` is required for DNR redirects but no browsing data is read or transmitted.
 
-- [x] **Step 2: `README.md`** — project one-liner (client-side complement to DNS-level filtering, per AGENTS.md); status table for phases 1–5 (Phase 1 done, others pending); dev quickstart: `pnpm install`, `pnpm dev`, `pnpm build`, `pnpm test`, `pnpm typecheck`; load-unpacked instructions for Chrome (`chrome://extensions` → Developer mode → Load unpacked → `build/chrome-mv3-prod`); how to test blocking (navigate to any blocklist domain, e.g. `paypa1-secure.example.com` — reserved test domains, safe); manual Chrome checklist from AGENTS.md section 6; note that blocklist entries live in `src/data/blocklist.json`.
+- [ ] **Step 2: `README.md`** — project one-liner (client-side complement to DNS-level filtering, per AGENTS.md); status table for phases 1–5 (Phase 1 done, others pending); dev quickstart: `pnpm install`, `pnpm dev`, `pnpm build`, `pnpm test`, `pnpm typecheck`; load-unpacked instructions for Chrome (`chrome://extensions` → Developer mode → Load unpacked → `build/chrome-mv3-prod`); how to test blocking (navigate to any blocklist domain, e.g. `paypa1-secure.example.com` — reserved test domains, safe); manual Chrome checklist from AGENTS.md section 6; note that blocklist entries live in `src/data/blocklist.json`.
 
-- [x] **Step 3: `TODO.md`** — hierarchical checkboxes mirroring AGENTS.md build phases; Phase 1 items marked `[x]` only after integration verification, Phases 2–5 unchecked.
+- [ ] **Step 3: `TODO.md`** — hierarchical checkboxes mirroring AGENTS.md build phases; Phase 1 items marked `[x]` only after integration verification, Phases 2–5 unchecked.
 
-- [x] **Step 4: Commit**
+- [ ] **Step 4: Commit**
 
 ```bash
 git add PRIVACY.md README.md TODO.md
@@ -738,10 +738,10 @@ git commit -m "docs: add privacy policy, readme, and phase checklist"
 
 ### Task 5: Integration verification (owner: main session)
 
-- [x] **Step 1:** `pnpm exec prettier --write src/**/*.{ts,tsx}` — normalize style.
-- [x] **Step 2:** `pnpm exec tsc --noEmit && pnpm test && pnpm build` — all must pass; verify `build/chrome-mv3-prod/manifest.json` retains `permissions`, `host_permissions`, `web_accessible_resources`, `background.service_worker`, and `tabs/blocked.html` exists in output.
-- [x] **Step 3:** Manually load `build/chrome-mv3-prod` in Chrome; confirm: (a) navigating to a listed domain lands on the blocked page with domain + source + reason; (b) normal sites unaffected; (c) popup toggle disables/re-enables; (d) no console errors. **Blocked on user environment** — requires interactive Chrome; checklist lives in README.
-- [x] **Step 4:** Final commits per conventional-commit style.
+- [ ] **Step 1:** `pnpm exec prettier --write src/**/*.{ts,tsx}` — normalize style.
+- [ ] **Step 2:** `pnpm exec tsc --noEmit && pnpm test && pnpm build` — all must pass; verify `build/chrome-mv3-prod/manifest.json` retains `permissions`, `host_permissions`, `web_accessible_resources`, `background.service_worker`, and `tabs/blocked.html` exists in output.
+- [ ] **Step 3:** Manually load `build/chrome-mv3-prod` in Chrome; confirm: (a) navigating to a listed domain lands on the blocked page with domain + source + reason; (b) normal sites unaffected; (c) popup toggle disables/re-enables; (d) no console errors. **Blocked on user environment** — requires interactive Chrome; checklist lives in README.
+- [ ] **Step 4:** Final commits per conventional-commit style.
 
 ## Self-Review
 

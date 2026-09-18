@@ -31,3 +31,6 @@ dist/
 
 # typescript
 .tsbuildinfo
+
+# superpowers SDD scratch
+.superpowers/
