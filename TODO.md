@@ -1,24 +1,24 @@
 # TODO — phishing-guard
 
 Mirrors the build phases in [AGENTS.md](AGENTS.md) section 5. Phase 1 is
-code complete (unit tests and typecheck pass); every box below stays
-unchecked until integration verification in a real browser, per AGENTS.md
-section 6.
+code complete: unit tests, typecheck, and production build pass. Boxes stay
+unchecked until verified; only real-browser verification remains for
+Phase 1, per AGENTS.md section 6.
 
 ## Phase 1 — Blocklist MVP (Chrome only)
 
-- [ ] Bundled blocklist of known-bad domains (`src/data/blocklist.json`,
+- [x] Bundled blocklist of known-bad domains (`src/data/blocklist.json`,
       five RFC 2606 reserved test domains)
-- [ ] DNR rule building: host-to-regex, main-frame redirect rules
+- [x] DNR rule building: host-to-regex, main-frame redirect rules
       (`src/lib/blocklist.ts`)
-- [ ] Background service worker syncs session rules with enable state
+- [x] Background service worker syncs session rules with enable state
       (`src/background/rules.ts`, `src/background/index.ts`)
-- [ ] Explainable blocked page: matched domain, source list, original URL
+- [x] Explainable blocked page: matched domain, source list, original URL
       (`src/tabs/blocked.tsx`, `src/lib/explain.ts`)
-- [ ] Status popup: enable toggle, last blocked event (`src/popup.tsx`)
-- [ ] Local-only storage for `enabled` and `lastBlocked`
+- [x] Status popup: enable toggle, last blocked event (`src/popup.tsx`)
+- [x] Local-only storage for `enabled` and `lastBlocked`
       (`src/lib/storage.ts`)
-- [ ] Unit tests pass (`pnpm test`, 13 tests) and `pnpm typecheck` is clean
+- [x] Unit tests pass (`pnpm test`, 13 tests) and `pnpm typecheck` is clean
 - [ ] Integration verification in Chrome: load `build/chrome-mv3-prod`
       unpacked, confirm a test domain is blocked with a visible reason,
       confirm normal sites are untouched, and confirm no console errors
