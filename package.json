@@ -9,7 +9,8 @@
     "build": "plasmo build",
     "package": "plasmo package",
     "test": "vitest run",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "lint:firefox": "web-ext lint --source-dir build/firefox-mv2-prod"
   },
   "dependencies": {
     "plasmo": "0.90.5",
@@ -26,9 +27,16 @@
     "@types/webextension-polyfill": "0.12.3",
     "prettier": "3.2.4",
     "typescript": "5.3.3",
-    "vitest": "3.2.4"
+    "vitest": "3.2.4",
+    "web-ext": "^10.6.0"
   },
   "manifest": {
+    "browser_specific_settings": {
+      "gecko": {
+        "id": "$FIREFOX_EXT_ID",
+        "strict_min_version": "113.0"
+      }
+    },
     "permissions": [
       "declarativeNetRequest",
       "storage"
