@@ -10,7 +10,7 @@ network requests, collects no page content, and sends nothing off-device.
 
 This is a practice project built with
 [Plasmo](https://www.plasmo.com/) 0.90.5, TypeScript, React 18, and
-[webextension-polyfill](https://github.com/plasmo-corp/webextension-polyfill).
+[webextension-polyfill](https://github.com/mozilla/webextension-polyfill).
 
 ## Status
 
