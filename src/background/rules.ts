@@ -13,17 +13,17 @@ export async function syncBlocklistRules(): Promise<void> {
   const enabled = await getEnabled()
   const existing = await browser.declarativeNetRequest.getSessionRules()
   const existingIds = existing.map((rule) => rule.id)
-  if (!enabled) {
-    await browser.declarativeNetRequest.updateSessionRules({
-      removeRuleIds: existingIds
-    })
-    return
-  }
-  const rules = buildRules(
-    blocklist as BlocklistEntry[],
-    browser.runtime.getURL(BLOCKED_PAGE_PATH)
-  )
   try {
+    if (!enabled) {
+      await browser.declarativeNetRequest.updateSessionRules({
+        removeRuleIds: existingIds
+      })
+      return
+    }
+    const rules = buildRules(
+      blocklist as BlocklistEntry[],
+      browser.runtime.getURL(BLOCKED_PAGE_PATH)
+    )
     await browser.declarativeNetRequest.updateSessionRules({
       removeRuleIds: existingIds,
       addRules: rules as unknown as NonNullable<
@@ -31,6 +31,6 @@ export async function syncBlocklistRules(): Promise<void> {
       >
     })
   } catch (error) {
-    console.error("[phishing-guard] failed to apply blocklist rules", error)
+    console.error("[phishing-guard] failed to sync blocklist rules", error)
   }
 }

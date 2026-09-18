@@ -1,6 +1,5 @@
 import type { BlocklistEntry, DnrRule } from "./types"
 
-export const RULE_TAG = "phishing-guard-blocklist"
 export const BLOCKED_PAGE_PATH = "tabs/blocked.html"
 
 const REGEX_SPECIALS = /[.*+?^${}()|[\]\\]/g
