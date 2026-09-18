@@ -30,7 +30,7 @@ dist/
 .plasmo
 
 # typescript
-.tsbuildinfo
+*.tsbuildinfo
 
 # superpowers SDD scratch
 .superpowers/

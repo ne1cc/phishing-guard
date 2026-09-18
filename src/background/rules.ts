@@ -10,10 +10,10 @@ type UpdateSessionRulesArgs = Parameters<
 >[0]
 
 export async function syncBlocklistRules(): Promise<void> {
-  const enabled = await getEnabled()
-  const existing = await browser.declarativeNetRequest.getSessionRules()
-  const existingIds = existing.map((rule) => rule.id)
   try {
+    const enabled = await getEnabled()
+    const existing = await browser.declarativeNetRequest.getSessionRules()
+    const existingIds = existing.map((rule) => rule.id)
     if (!enabled) {
       await browser.declarativeNetRequest.updateSessionRules({
         removeRuleIds: existingIds

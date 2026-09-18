@@ -9,6 +9,16 @@ export function hostToRegexPattern(domain: string): string {
   return `^(https?://(?:[^/]*\\.)?${escaped}(?::\\d+)?(?:[/?].*)?)$`
 }
 
+export function findBlocklistEntry(
+  entries: readonly BlocklistEntry[],
+  hostname: string
+): BlocklistEntry | null {
+  const normalized = hostname.toLowerCase()
+  return (
+    entries.find((entry) => entry.domain.toLowerCase() === normalized) ?? null
+  )
+}
+
 export function buildRules(
   entries: readonly BlocklistEntry[],
   blockedPageBaseUrl: string,

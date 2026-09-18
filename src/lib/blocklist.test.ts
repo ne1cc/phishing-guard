@@ -3,6 +3,7 @@ import { describe, expect, it } from "vitest"
 import {
   BLOCKED_PAGE_PATH,
   buildRules,
+  findBlocklistEntry,
   hostToRegexPattern,
   parseBlockedPageParams
 } from "./blocklist"
@@ -83,6 +84,23 @@ describe("blocklist regex matching", () => {
 
   it("does not match non-http schemes", () => {
     expect(matches("ftp://paypa1-secure.example.com/")).toBeNull()
+  })
+})
+
+describe("findBlocklistEntry", () => {
+  it("matches an exact hostname", () => {
+    expect(findBlocklistEntry([entry], "paypa1-secure.example.com")).toBe(entry)
+  })
+
+  it("matches case-insensitively", () => {
+    expect(findBlocklistEntry([entry], "PayPa1-Secure.Example.COM")).toBe(entry)
+  })
+
+  it("returns null for non-matching hostnames", () => {
+    expect(findBlocklistEntry([entry], "example.com")).toBeNull()
+    expect(
+      findBlocklistEntry([entry], "a.paypa1-secure.example.com")
+    ).toBeNull()
   })
 })
 

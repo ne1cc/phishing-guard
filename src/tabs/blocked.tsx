@@ -1,7 +1,7 @@
 import { useEffect, useMemo } from "react"
 
 import blocklist from "~/data/blocklist.json"
-import { parseBlockedPageParams } from "~/lib/blocklist"
+import { findBlocklistEntry, parseBlockedPageParams } from "~/lib/blocklist"
 import { explainBlocklistMatch, explainUnknownBlock } from "~/lib/explain"
 import { recordBlockEvent } from "~/lib/storage"
 import type { BlocklistEntry } from "~/lib/types"
@@ -23,26 +23,24 @@ function BlockedPage() {
     () => (params ? extractHostname(params.url) : null),
     [params]
   )
-  const note = useMemo(() => {
-    if (!hostname) {
-      return null
-    }
-    return (
-      (blocklist as BlocklistEntry[]).find((entry) => entry.domain === hostname)
-        ?.note ?? null
-    )
-  }, [hostname])
+  const entry = useMemo(
+    () =>
+      hostname
+        ? findBlocklistEntry(blocklist as BlocklistEntry[], hostname)
+        : null,
+    [hostname]
+  )
 
   useEffect(() => {
-    if (params && hostname) {
+    if (params && hostname && entry) {
       void recordBlockEvent({
         url: params.url,
         domain: hostname,
-        source: params.source,
+        source: entry.source,
         blockedAt: Date.now()
       })
     }
-  }, [params, hostname])
+  }, [params, hostname, entry])
 
   const containerStyle = {
     display: "flex",
@@ -58,11 +56,26 @@ function BlockedPage() {
     textAlign: "center" as const
   }
 
-  if (!params || !hostname) {
+  const closeButton = (
+    <button
+      type="button"
+      onClick={() => window.close()}
+      style={{
+        marginTop: 16,
+        padding: "8px 16px",
+        fontSize: 14,
+        cursor: "pointer"
+      }}>
+      Close this tab
+    </button>
+  )
+
+  if (!params || !hostname || !entry) {
     return (
       <main style={containerStyle}>
         <h1>Request blocked</h1>
         <p style={{ maxWidth: 480 }}>{explainUnknownBlock()}</p>
+        {closeButton}
       </main>
     )
   }
@@ -86,7 +99,7 @@ function BlockedPage() {
       </div>
       <h1 style={{ margin: "0 0 8px" }}>Phishing guard blocked this page</h1>
       <p style={{ maxWidth: 480, fontSize: 14 }}>
-        {explainBlocklistMatch({ domain: hostname, source: params.source })}
+        {explainBlocklistMatch({ domain: hostname, source: entry.source })}
       </p>
       <p
         style={{
@@ -97,20 +110,12 @@ function BlockedPage() {
         }}>
         {params.url}
       </p>
-      {note && (
-        <p style={{ maxWidth: 480, fontSize: 12, color: "#555" }}>{note}</p>
+      {entry.note && (
+        <p style={{ maxWidth: 480, fontSize: 12, color: "#555" }}>
+          {entry.note}
+        </p>
       )}
-      <button
-        type="button"
-        onClick={() => window.close()}
-        style={{
-          marginTop: 16,
-          padding: "8px 16px",
-          fontSize: 14,
-          cursor: "pointer"
-        }}>
-        Close this tab
-      </button>
+      {closeButton}
     </main>
   )
 }
