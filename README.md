@@ -4,8 +4,8 @@ An on-device phishing and scam site blocker for Manifest V3 browsers. It is
 the client-side complement to DNS-level filtering: a DNS filter (in the
 style of Nandi Security's Kavalan) blocks bad domains network-wide, while
 this extension runs inside the browser to catch what DNS-level filtering
-cannot. See [AGENTS.md](AGENTS.md) for the full project context and
-[PRIVACY.md](PRIVACY.md) for the privacy policy — the extension makes no
+cannot. See [PRIVACY.md](PRIVACY.md) for the privacy policy — the extension
+makes no
 network requests, collects no page content, and sends nothing off-device.
 
 This is a practice project built with
@@ -351,7 +351,7 @@ https://xn--80ak6aa92e.com/          # punycode lookalike
 Sites like `google.com`, `github.com`, or `apple.com` must show nothing.
 The popup's "Last warning" section records the most recent one.
 
-## Manual Chrome checklist (AGENTS.md section 6)
+## Manual browser checklist
 
 The per-browser checklist repeats every phase; Phase 1 covers the Chrome
 row (Firefox/Edge/Safari rows apply to later phases):
@@ -380,16 +380,10 @@ src/
 └── popup.tsx     # toolbar popup: status, toggle, last blocked, last warning
 ```
 
-## How this was built (process record)
+## Implementation notes
 
-Work proceeded through a brainstormed design spec and a task-by-task
-implementation plan per milestone (see
-`docs/superpowers/specs/` and `docs/superpowers/plans/`), executed with a
-fresh implementer subagent per task and an independent reviewer per diff.
-Notable verified decisions from that process:
-
-- Scaffolded from the create-plasmo 0.90.5 template (driven through a
-  PTY), adapted to the `src/` layout; pnpm 12 `allowBuilds` configured.
+- Scaffolded from the create-plasmo 0.90.5 template and adapted to the
+  `src/` layout; pnpm 12 `allowBuilds` configured.
 - DNR **session rules** (dynamic, toggle-friendly) over a static
   ruleset; **regex redirect with substitution** (preserves the original
   URL) over `requestDomains` + `extensionPath` (would lose it).

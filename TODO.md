@@ -1,7 +1,7 @@
 # TODO — phishing-guard
 
-Mirrors the build phases in [AGENTS.md](AGENTS.md) section 5. Phases 1, 2,
-3 (build-level), and 5 (baseline model) are code complete: unit tests,
+Phases 1, 2, 3 (build-level), and 5 (baseline model) are code complete:
+unit tests,
 typecheck, and builds pass. Remaining boxes need real browsers
 (Chrome verification, Firefox `web-ext run`, Edge, Safari via Xcode).
 
@@ -73,7 +73,7 @@ typecheck, and builds pass. Remaining boxes need real browsers
 
 ## Per-browser testing checklist
 
-Repeat every phase, per AGENTS.md section 6:
+Repeat every phase:
 
 - [ ] Load unpacked in Chrome (`chrome://extensions` → Developer mode → Load unpacked)
 - [ ] Load temporarily in Firefox (`about:debugging` or `web-ext run`)
